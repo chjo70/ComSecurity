@@ -57,12 +57,17 @@ CComSecurityDlg::CComSecurityDlg(CWnd* pParent /*=NULL*/)
 void CComSecurityDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST_NETWORKCARD, m_CListNetwork);
+	DDX_Control(pDX, IDC_IPADDRESS, m_IPv4);
+	DDX_Control(pDX, IDC_DNSSERVER, m_DHCPServer);
 }
 
 BEGIN_MESSAGE_MAP(CComSecurityDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_NOTIFY(HDN_ITEMCLICK, 0, &CComSecurityDlg::OnHdnItemclickListNetworkcard)
+	ON_NOTIFY(NM_CLICK, IDC_LIST_NETWORKCARD, &CComSecurityDlg::OnNMClickListNetworkcard)
 END_MESSAGE_MAP()
 
 
@@ -98,6 +103,9 @@ BOOL CComSecurityDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+	InitControl();
+
+	GetOSVersion();
 	CheckOverComputer();
 
 
@@ -153,7 +161,183 @@ HCURSOR CComSecurityDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+void CComSecurityDlg::InitControl()
+{
+	CRect rt;
+
+	m_CListNetwork.GetWindowRect(&rt);
+	m_CListNetwork.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT );
+
+	m_CListNetwork.InsertColumn(0, _T("순번"), LVCFMT_LEFT, (int) ( rt.Width()*0.12), -1 );
+	m_CListNetwork.InsertColumn(1, _T("네트워크 카드"), LVCFMT_LEFT, (int) ( rt.Width() * 0.8) , -1);
+	m_CListNetwork.InsertColumn(2, _T("기타"), LVCFMT_LEFT, (int) (rt.Width() * 0.07), -1);
+
+	m_CListNetwork.SetGridLines(TRUE);
+	m_CListNetwork.SetCheckboxeStyle(RC_CHKBOX_NORMAL); // Enable checkboxes
+}
+
+/**
+ * @brief     
+ * @return    void
+ * @author    조철희 (churlhee.jo@lignex1.com)
+ * @version   0.0.1
+ * @date      2020/04/01 22:08:41
+ * @warning   
+ */
 void CComSecurityDlg::CheckOverComputer()
 {
 
+	CheckNetworkCards();
+
+}
+
+void CComSecurityDlg::CheckNetworkCards()
+{
+	UINT i, j=1;
+
+	int nIndex;
+
+	LONG    ret;  
+
+	HKEY hKey;  
+
+	char    data_buffer[256];  
+	DWORD   data_type;  
+	DWORD   data_size;  
+
+	DWORD dwType;
+	DWORD dwBytes=100;
+
+	CString strTemp;
+
+	TCHAR subKey[300];
+	TCHAR szValue[300];
+
+	if( ERROR_SUCCESS == RegOpenKeyEx( HKEY_LOCAL_MACHINE ,                // 키 값  
+		_T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkList\\Profiles"),    // 서브 키값   
+		0,                                                  // 옵션 항상 0  
+		KEY_READ,                                    // 접근 권한  
+		&hKey                                               // 키 핸들  
+		) ) {
+
+	}  
+	else {
+		//AfxMessageBox( _T("Register Open Error") );
+	}
+
+	for( i=1 ; i < 100 ; ++i ) {
+		STR_NETWORKCARD strNetworkCard;
+
+		wsprintf( subKey, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkCards\\%d") , i );
+		if( ERROR_SUCCESS == RegOpenKeyEx( HKEY_LOCAL_MACHINE ,                // 키 값  
+			subKey,
+			0,                                                  // 옵션 항상 0  
+			KEY_READ,                                    // 접근 권한  
+			&hKey                                               // 키 핸들  
+			) ) {
+			// Read Regstry Key
+			ret = RegQueryValueEx( hKey, _T("ServiceName"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			strNetworkCard.strServiceName = szValue;
+
+			ret = RegQueryValueEx( hKey, _T("Description"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			strNetworkCard.strDescription = szValue;
+
+			m_vecNetworkCard.push_back( strNetworkCard );
+			
+			// 목록창에 전시
+			strTemp.Format( _T("%d"), j++ );
+			nIndex = m_CListNetwork.InsertItem( INT_MAX, strTemp, NULL );
+
+			m_CListNetwork.SetItem( nIndex, 1, LVIF_TEXT, szValue, NULL, NULL, NULL, NULL);
+
+		}  
+		else {
+			
+		}
+	}
+
+	UINT uiVecSize=m_vecNetworkCard.size();
+	vector<STR_NETWORKCARD>::pointer ptrNetworkCard;
+
+	ptrNetworkCard = m_vecNetworkCard.data();
+	for( i=0 ; i < uiVecSize ; ++i ) {
+		wsprintf( subKey, _T("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\%s") , (*ptrNetworkCard).strServiceName );
+		if( ERROR_SUCCESS == RegOpenKeyEx( HKEY_LOCAL_MACHINE ,                // 키 값  
+			subKey,
+			0,                                                  // 옵션 항상 0  
+			KEY_READ,                                    // 접근 권한  
+			&hKey                                               // 키 핸들  
+			) ) {
+			ret = RegQueryValueEx( hKey, _T("DhcpNameServer"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			(*ptrNetworkCard).strDhcpNameServer = szValue;
+
+			ret = RegQueryValueEx( hKey, _T("DhcpIPAddress"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			(*ptrNetworkCard).strIP4v = szValue;
+
+			ret = RegQueryValueEx( hKey, _T("DhcpNameServer"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			(*ptrNetworkCard).strDhcpNameServer = szValue;
+			
+			(*ptrNetworkCard).strDescription;
+			(*ptrNetworkCard).strServiceName;
+		}
+		
+		
+		++ ptrNetworkCard;
+	}
+
+}
+
+/**
+ * @brief     
+ * @return    void
+ * @author    조철희 (churlhee.jo@lignex1.com)
+ * @version   0.0.1
+ * @date      2020/04/01 22:15:02
+ * @warning   
+ */
+enOS CComSecurityDlg::GetOSVersion()
+{
+	enOS enWhatOS=enWindows_Unknown;
+	OSVERSIONINFO osvi;
+
+	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx(&osvi);
+
+	switch( osvi.dwMajorVersion ) {
+	case 5 :
+		if( osvi.dwMinorVersion == 0 ) {
+			enWhatOS = enWindows_2000;
+		}
+		else if( osvi.dwMinorVersion == 1 ) {
+			enWhatOS = enWindows_XP;
+		}
+		else if( osvi.dwMinorVersion == 2 ) {
+			if( GetSystemMetrics(SM_SERVERR2) != 0 )
+				enWhatOS = enWindows_Server_2003_R2;
+			else
+				enWhatOS = enWindows_Server_2003;
+		}
+
+	case 6 :
+		break;
+	}
+
+	return enWhatOS;
+}
+
+
+void CComSecurityDlg::OnHdnItemclickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMHEADER phdr = reinterpret_cast<LPNMHEADER>(pNMHDR);
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	*pResult = 0;
+}
+
+
+void CComSecurityDlg::OnNMClickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	*pResult = 0;
 }

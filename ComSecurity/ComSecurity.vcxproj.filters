@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\ListCtrl">
+      <UniqueIdentifier>{f412d7bd-3efd-4172-9d1b-cf59f1009b61}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -39,6 +42,21 @@
     <ClInclude Include="Resource.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="ListCtrl\CBSpeedListCtrl.h">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrl\ComboItem.h">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrl\EditItem.h">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrl\EditList.h">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrl\ReportCtrl.h">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ComSecurity.cpp">
@@ -49,6 +67,21 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrl\CBSpeedListCtrl.cpp">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrl\ComboItem.cpp">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrl\EditItem.cpp">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrl\EditList.cpp">
+      <Filter>소스 파일\ListCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrl\ReportCtrl.cpp">
+      <Filter>소스 파일\ListCtrl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
