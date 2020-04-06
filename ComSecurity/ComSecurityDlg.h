@@ -8,6 +8,7 @@
 #include "./ListCtrl/ReportCtrl.h"
 
 #include <vector>
+#include "afxwin.h"
 
 using namespace std;
 
@@ -38,6 +39,9 @@ typedef struct {
 
 	CString strIP4v;
 	CString strDhcpNameServer;
+	CString strDhcpServer;
+	time_t tiLeaseObtainedTime;
+	time_t tiLeaseTerminatesTime;
 
 } STR_NETWORKCARD;
 
@@ -88,4 +92,7 @@ public:
 	afx_msg void OnHdnItemclickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMClickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult);
 	CIPAddressCtrl m_DHCPServer;
+	CStatic m_CStaticLeaseObtainedTime;
+	CStatic m_CStaticLeaseTerminatesTime;
+	CStatic m_CStaticGroupNetworkcard;
 };

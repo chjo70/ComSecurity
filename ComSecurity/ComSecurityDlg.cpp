@@ -60,6 +60,9 @@ void CComSecurityDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST_NETWORKCARD, m_CListNetwork);
 	DDX_Control(pDX, IDC_IPADDRESS, m_IPv4);
 	DDX_Control(pDX, IDC_DNSSERVER, m_DHCPServer);
+	DDX_Control(pDX, IDC_STATIC_LEASEOBTAINEDTIME, m_CStaticLeaseObtainedTime);
+	DDX_Control(pDX, IDC_STATIC_LEASETERMINATESTIME, m_CStaticLeaseTerminatesTime);
+	DDX_Control(pDX, IDC_STATIC_NETWORKCARD, m_CStaticGroupNetworkcard);
 }
 
 BEGIN_MESSAGE_MAP(CComSecurityDlg, CDialogEx)
@@ -173,7 +176,7 @@ void CComSecurityDlg::InitControl()
 	m_CListNetwork.InsertColumn(2, _T("기타"), LVCFMT_LEFT, (int) (rt.Width() * 0.07), -1);
 
 	m_CListNetwork.SetGridLines(TRUE);
-	m_CListNetwork.SetCheckboxeStyle(RC_CHKBOX_NORMAL); // Enable checkboxes
+	//m_CListNetwork.SetCheckboxeStyle(RC_CHKBOX_NORMAL); // Enable checkboxes
 }
 
 /**
@@ -235,6 +238,15 @@ void CComSecurityDlg::CheckNetworkCards()
 			KEY_READ,                                    // 접근 권한  
 			&hKey                                               // 키 핸들  
 			) ) {
+			strNetworkCard.strDescription = _T("");
+			strNetworkCard.strServiceName = _T("");
+
+			strNetworkCard.strIP4v = _T("");
+			strNetworkCard.strDhcpNameServer = _T("");
+			strNetworkCard.strDhcpServer = _T("");
+			strNetworkCard.tiLeaseObtainedTime = 0;
+			strNetworkCard.tiLeaseTerminatesTime = 0;
+
 			// Read Regstry Key
 			ret = RegQueryValueEx( hKey, _T("ServiceName"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
 			strNetworkCard.strServiceName = szValue;
@@ -274,16 +286,23 @@ void CComSecurityDlg::CheckNetworkCards()
 			ret = RegQueryValueEx( hKey, _T("DhcpIPAddress"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
 			(*ptrNetworkCard).strIP4v = szValue;
 
-			ret = RegQueryValueEx( hKey, _T("DhcpNameServer"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
-			(*ptrNetworkCard).strDhcpNameServer = szValue;
+			ret = RegQueryValueEx( hKey, _T("DhcpServer"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			(*ptrNetworkCard).strDhcpServer = szValue;
+
+			ret = RegQueryValueEx( hKey, _T("LeaseObtainedTime"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			(*ptrNetworkCard).tiLeaseObtainedTime = szValue[0] | ( szValue[1] << 16 );
+
+			ret = RegQueryValueEx( hKey, _T("LeaseTerminatesTime"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			(*ptrNetworkCard).tiLeaseTerminatesTime = szValue[0] | ( szValue[1] << 16 );
 			
-			(*ptrNetworkCard).strDescription;
-			(*ptrNetworkCard).strServiceName;
 		}
 		
 		
 		++ ptrNetworkCard;
 	}
+
+	strTemp.Format( _T("%d개의 네트워크 카드"), uiVecSize );
+	m_CStaticGroupNetworkcard.SetWindowTextW( strTemp );
 
 }
 
@@ -334,10 +353,48 @@ void CComSecurityDlg::OnHdnItemclickListNetworkcard(NMHDR *pNMHDR, LRESULT *pRes
 	*pResult = 0;
 }
 
-
+static TCHAR weekday[10][10] = { _T("일"), _T("월"), _T("화"), _T("수"), _T("목"), _T("금"), _T("토") } ;
 void CComSecurityDlg::OnNMClickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	int iSelItem = pNMItemActivate->iItem;
+	int nField1, nField2, nField3, nField4;
+
+	struct tm *pTimeInfo;
+
+	CString strTemp;
+
+	STR_NETWORKCARD stNetworkCard;
+
+	if( iSelItem >= 0 ) {
+		stNetworkCard = m_vecNetworkCard.at(iSelItem);
+
+		swscanf( stNetworkCard.strIP4v.GetBuffer(), _T("%d.%d.%d.%d"), & nField1, & nField2, & nField3, & nField4 );
+		m_IPv4.SetAddress( nField1, nField2, nField3, nField4 );
+
+		swscanf( stNetworkCard.strDhcpServer.GetBuffer(), _T("%d.%d.%d.%d"), & nField1, & nField2, & nField3, & nField4 );
+		m_DHCPServer.SetAddress( nField1, nField2, nField3, nField4 );
+
+		if( stNetworkCard.tiLeaseObtainedTime != 0 ) {
+			pTimeInfo = localtime( & stNetworkCard.tiLeaseObtainedTime );
+			strTemp.Format( _T("%d년 %d월 %d일 %s요일 %d시 %d분 %d초"), pTimeInfo->tm_year+1900, pTimeInfo->tm_mon+1, pTimeInfo->tm_mday, weekday[ pTimeInfo->tm_wday ], pTimeInfo->tm_hour, pTimeInfo->tm_min, pTimeInfo->tm_sec );
+		}
+		else {
+			strTemp = _T("기록 없음");
+		}
+		m_CStaticLeaseObtainedTime.SetWindowText( strTemp );
+
+		if( stNetworkCard.tiLeaseTerminatesTime != 0 ) {
+			pTimeInfo = localtime( & stNetworkCard.tiLeaseTerminatesTime );
+			strTemp.Format( _T("%d년 %d월 %d일 %s요일 %d시 %d분 %d초"), pTimeInfo->tm_year+1900, pTimeInfo->tm_mon+1, pTimeInfo->tm_mday, weekday[ pTimeInfo->tm_wday ], pTimeInfo->tm_hour, pTimeInfo->tm_min, pTimeInfo->tm_sec );
+		}
+		else {
+			strTemp = _T("기록 없음");
+		}
+		m_CStaticLeaseTerminatesTime.SetWindowText( strTemp );
+
+	}
+
 	*pResult = 0;
 }
