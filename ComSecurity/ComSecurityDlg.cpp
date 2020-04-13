@@ -63,6 +63,7 @@ void CComSecurityDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_LEASEOBTAINEDTIME, m_CStaticLeaseObtainedTime);
 	DDX_Control(pDX, IDC_STATIC_LEASETERMINATESTIME, m_CStaticLeaseTerminatesTime);
 	DDX_Control(pDX, IDC_STATIC_NETWORKCARD, m_CStaticGroupNetworkcard);
+	DDX_Control(pDX, IDC_GATEWAY, m_CGateway);
 }
 
 BEGIN_MESSAGE_MAP(CComSecurityDlg, CDialogEx)
@@ -71,6 +72,7 @@ BEGIN_MESSAGE_MAP(CComSecurityDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_NOTIFY(HDN_ITEMCLICK, 0, &CComSecurityDlg::OnHdnItemclickListNetworkcard)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_NETWORKCARD, &CComSecurityDlg::OnNMClickListNetworkcard)
+	ON_BN_CLICKED(IDOK, &CComSecurityDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -110,7 +112,6 @@ BOOL CComSecurityDlg::OnInitDialog()
 
 	GetOSVersion();
 	CheckOverComputer();
-
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -289,6 +290,9 @@ void CComSecurityDlg::CheckNetworkCards()
 			ret = RegQueryValueEx( hKey, _T("DhcpServer"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
 			(*ptrNetworkCard).strDhcpServer = szValue;
 
+			ret = RegQueryValueEx( hKey, _T("DhcpDefaultGateway"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
+			(*ptrNetworkCard).strGateway = szValue;
+
 			ret = RegQueryValueEx( hKey, _T("LeaseObtainedTime"), 0, &dwType, (LPBYTE) szValue, &dwBytes);
 			(*ptrNetworkCard).tiLeaseObtainedTime = szValue[0] | ( szValue[1] << 16 );
 
@@ -373,8 +377,11 @@ void CComSecurityDlg::OnNMClickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult)
 		swscanf( stNetworkCard.strIP4v.GetBuffer(), _T("%d.%d.%d.%d"), & nField1, & nField2, & nField3, & nField4 );
 		m_IPv4.SetAddress( nField1, nField2, nField3, nField4 );
 
-		swscanf( stNetworkCard.strDhcpServer.GetBuffer(), _T("%d.%d.%d.%d"), & nField1, & nField2, & nField3, & nField4 );
+		swscanf( stNetworkCard.strDhcpNameServer.GetBuffer(), _T("%d.%d.%d.%d"), & nField1, & nField2, & nField3, & nField4 );
 		m_DHCPServer.SetAddress( nField1, nField2, nField3, nField4 );
+
+		swscanf( stNetworkCard.strGateway.GetBuffer(), _T("%d.%d.%d.%d"), & nField1, & nField2, & nField3, & nField4 );
+		m_CGateway.SetAddress( nField1, nField2, nField3, nField4 );
 
 		if( stNetworkCard.tiLeaseObtainedTime != 0 ) {
 			pTimeInfo = localtime( & stNetworkCard.tiLeaseObtainedTime );
@@ -397,4 +404,30 @@ void CComSecurityDlg::OnNMClickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	*pResult = 0;
+}
+
+
+/**
+ * @brief     
+ * @return    void
+ * @author    조철희 (churlhee.jo@lignex1.com)
+ * @version   0.0.1
+ * @date      2020/04/14 0:13:20
+ * @warning   
+ */
+void CComSecurityDlg::OnBnClickedOk()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	m_CListNetwork.DeleteAllItems();
+
+	GetOSVersion();
+	CheckOverComputer();
+
+	DisplaySecurityResult();
+	//CDialogEx::OnOK();
+}
+
+void CComSecurityDlg::DisplaySecurityResult()
+{
+
 }

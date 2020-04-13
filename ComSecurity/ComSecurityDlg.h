@@ -40,6 +40,8 @@ typedef struct {
 	CString strIP4v;
 	CString strDhcpNameServer;
 	CString strDhcpServer;
+	CString strGateway;
+
 	time_t tiLeaseObtainedTime;
 	time_t tiLeaseTerminatesTime;
 
@@ -64,6 +66,7 @@ public:
 	enOS GetOSVersion();
 
 	void CheckNetworkCards();
+	void DisplaySecurityResult();
 
 // 생성입니다.
 public:
@@ -95,4 +98,6 @@ public:
 	CStatic m_CStaticLeaseObtainedTime;
 	CStatic m_CStaticLeaseTerminatesTime;
 	CStatic m_CStaticGroupNetworkcard;
+	afx_msg void OnBnClickedOk();
+	CIPAddressCtrl m_CGateway;
 };
