@@ -95,6 +95,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="res\-.ico" />
+    <None Include="res\-.png" />
+    <None Include="res\bitmap1.bmp" />
     <None Include="res\ComSecurity.ico" />
     <None Include="res\ComSecurity.rc2" />
   </ItemGroup>

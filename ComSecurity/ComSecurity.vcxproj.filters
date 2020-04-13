@@ -25,6 +25,15 @@
     <None Include="res\ComSecurity.ico">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="res\bitmap1.bmp">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="res\-.png">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="res\-.ico">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ComSecurity.h">

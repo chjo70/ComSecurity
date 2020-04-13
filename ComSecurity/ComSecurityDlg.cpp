@@ -169,12 +169,23 @@ void CComSecurityDlg::InitControl()
 {
 	CRect rt;
 
+	// 이미지
+	m_CListNetwork.SetImageList(IDB_BITMAP_HEADER);
+
 	m_CListNetwork.GetWindowRect(&rt);
 	m_CListNetwork.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT );
+
+
+	//m_CListNetwork.SetColumnHeader(_T("Member ID, 100; Register Date, 140; Salary, 90, 2; FooBar, 120"));
 
 	m_CListNetwork.InsertColumn(0, _T("순번"), LVCFMT_LEFT, (int) ( rt.Width()*0.12), -1 );
 	m_CListNetwork.InsertColumn(1, _T("네트워크 카드"), LVCFMT_LEFT, (int) ( rt.Width() * 0.8) , -1);
 	m_CListNetwork.InsertColumn(2, _T("기타"), LVCFMT_LEFT, (int) (rt.Width() * 0.07), -1);
+
+	//m_CListNetwork.SetHeaderImageList(IDB_BITMAP_HEADER);
+	//m_CListNetwork.SetHeaderImage(0, 0);
+	//m_CListNetwork.SetHeaderImage(1, 0, FALSE);
+	//m_CListNetwork.SetHeaderImage(2, 0);
 
 	m_CListNetwork.SetGridLines(TRUE);
 	//m_CListNetwork.SetCheckboxeStyle(RC_CHKBOX_NORMAL); // Enable checkboxes
@@ -229,6 +240,8 @@ void CComSecurityDlg::CheckNetworkCards()
 		//AfxMessageBox( _T("Register Open Error") );
 	}
 
+
+	m_vecNetworkCard.clear();
 	for( i=1 ; i < 100 ; ++i ) {
 		STR_NETWORKCARD strNetworkCard;
 
@@ -245,6 +258,7 @@ void CComSecurityDlg::CheckNetworkCards()
 			strNetworkCard.strIP4v = _T("");
 			strNetworkCard.strDhcpNameServer = _T("");
 			strNetworkCard.strDhcpServer = _T("");
+			strNetworkCard.strGateway = _T("");
 			strNetworkCard.tiLeaseObtainedTime = 0;
 			strNetworkCard.tiLeaseTerminatesTime = 0;
 
@@ -259,9 +273,14 @@ void CComSecurityDlg::CheckNetworkCards()
 			
 			// 목록창에 전시
 			strTemp.Format( _T("%d"), j++ );
-			nIndex = m_CListNetwork.InsertItem( INT_MAX, strTemp, NULL );
-
-			m_CListNetwork.SetItem( nIndex, 1, LVIF_TEXT, szValue, NULL, NULL, NULL, NULL);
+			nIndex = m_CListNetwork.InsertItemEx(INT_MAX, strTemp, strNetworkCard.strDescription, "" );
+			m_CListNetwork.SetItemImage( nIndex, 0, 4 );
+			m_CListNetwork.SetItemImage( nIndex, 1, 0 );
+// 			nIndex = m_CListNetwork.InsertItem( INT_MAX, strTemp, NULL );
+// 			//m_CListNetwork.SetItemImage( nIndex, 1, 100 );
+// 			
+// 			m_CListNetwork.SetItem( nIndex, 1, LVIF_TEXT, szValue, 1, NULL, NULL, NULL);
+// 			m_CListNetwork.SetItemImage( nIndex, 1, 0 );
 
 		}  
 		else {
@@ -362,7 +381,7 @@ void CComSecurityDlg::OnNMClickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	int iSelItem = pNMItemActivate->iItem;
+	int iSelItem;
 	int nField1, nField2, nField3, nField4;
 
 	struct tm *pTimeInfo;
@@ -371,8 +390,11 @@ void CComSecurityDlg::OnNMClickListNetworkcard(NMHDR *pNMHDR, LRESULT *pResult)
 
 	STR_NETWORKCARD stNetworkCard;
 
+	strTemp = m_CListNetwork.GetItemText( pNMItemActivate->iItem, 0 );
+	swscanf( strTemp.GetBuffer(), _T("%d"), & iSelItem );
+
 	if( iSelItem >= 0 ) {
-		stNetworkCard = m_vecNetworkCard.at(iSelItem);
+		stNetworkCard = m_vecNetworkCard.at(iSelItem-1);
 
 		swscanf( stNetworkCard.strIP4v.GetBuffer(), _T("%d.%d.%d.%d"), & nField1, & nField2, & nField3, & nField4 );
 		m_IPv4.SetAddress( nField1, nField2, nField3, nField4 );
